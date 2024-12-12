@@ -9,7 +9,7 @@ user_input = "I feel worried"
 faiss_response = "It's normal to feel worried. Try some deep breathing exercises to relax."
 
 # Combine user input and FAISS response into a prompt with clear instructions
-utterance = f"User is feeling worried and says: '{user_input}'. FAISS suggests the user: '{faiss_response}'. Act as a professional psychiatrist, and provide deeper empathetic advice, explore the user's feelings, and suggest additional coping strategies such as mindfulness, talking to a therapist, or self-care activities."
+utterance = f"Advice is not for you. User says: '{user_input}'. FAISS suggests: '{faiss_response}'. paraphrase the user input and faiss response"
 
 # Tokenize and generate response
 inputs = tokenizer(utterance, return_tensors="pt")

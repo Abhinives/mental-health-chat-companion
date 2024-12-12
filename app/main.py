@@ -1,43 +1,56 @@
+import pandas as pd
+import faiss
+import streamlit as st
 from loadcsv import *
 from faissRetrieval import *
 from embedding import *
-# from responseGenerator import *
-import faiss
-import streamlit as st
 
+# Load the dataframe
 df = pd.read_csv("../knowledge_base.csv")
 
-# triggerPhrase = list(df['Trigger Phrase'])
-# print(list(df['Trigger Phrase']))
-# embeddings = embeddingModel(triggerPhrase)
+# Initialize the FAISS index
+faissIndex = faiss.read_index("faiss_index")
 
-# faiss = faissStore(embeddings)
-# print(type(df))
+# Check if 'messages' is already in session state, if not initialize it
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
 
+# Define function to generate response
+def genResponse(userInput):
+    embed = embeddingModel([userInput])
+    D, I = faissIndex.search(np.array(embed).astype('float32'), k=1)
+    response = df.iloc[I[0][0]]
 
+    res1 = {
+        "role": 'user',
+        "content": userInput
+    }
 
-# faissIndex = faiss.read_index("faiss_index")
+    res2 = {
+        "role": 'assistant',
+        "content": response["Response"]
+    }
 
-# userInput = "I feel worried"
-
-# embed = embeddingModel([userInput])
-
-# D,I = faissIndex.search(np.array(embed).astype('float32'),k=1)
-# response = df.iloc[I[0][0]]['Response']
-
-
-# print(generate_response(userInput, response))
-
-
+    # Append new messages to session state
+    st.session_state.messages.append(res1)
+    st.session_state.messages.append(res2)
+    print(st.session_state.messages)
+# Display the app's title and caption
 st.title("Mental Health Chat Companion")
 st.caption("A compassionate companion for your mental well-being. Offering support, resources, and a listening ear, anytime you need it.")
 
-message1 = st.chat_message("user")
-message2 = st.chat_message("assistant")
+# Display all chat messages
+for msg in st.session_state.messages:
+    if msg['role'] == 'user':
+        message1 = st.chat_message("user")
+        message1.write(msg['content'])
+    else:
+        message2 = st.chat_message("assistant")
+        message2.write(msg['content'])
 
-message1.write("Hi")
-message2.write("Hello")
+# Chat input for the user
 prompt = st.chat_input("Say something")
 if prompt:
-    st.write("Sent")
+    genResponse(prompt)
+    st.rerun()
 
