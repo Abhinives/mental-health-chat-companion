@@ -1,34 +1,19 @@
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from transformers import BlenderbotTokenizer, BlenderbotForConditionalGeneration
 
-# Load tokenizer and model
-tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-model = GPT2LMHeadModel.from_pretrained('gpt2')
+# Load Blenderbot model and tokenizer
+tokenizer = BlenderbotTokenizer.from_pretrained("facebook/blenderbot-400M-distill")
+model = BlenderbotForConditionalGeneration.from_pretrained("facebook/blenderbot-400M-distill")
 
-# Add padding token if not present
-if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
+# User input and FAISS response
+user_input = "I feel worried"
+faiss_response = "It's normal to feel worried. Try some deep breathing exercises to relax."
 
-# Input text
-input_text = "hello i am abhinivesh"
-max_length = 128
+# Combine user input and FAISS response into a prompt with clear instructions
+utterance = f"User is feeling worried and says: '{user_input}'. FAISS suggests the user: '{faiss_response}'. Act as a professional psychiatrist, and provide deeper empathetic advice, explore the user's feelings, and suggest additional coping strategies such as mindfulness, talking to a therapist, or self-care activities."
 
-# Encode input text with attention mask
-inputs = tokenizer(input_text, return_tensors="pt", padding=True, truncation=True)
-input_ids = inputs['input_ids']
-attention_mask = inputs['attention_mask']
+# Tokenize and generate response
+inputs = tokenizer(utterance, return_tensors="pt")
+res = model.generate(**inputs)
 
-# Generate response
-response = model.generate(
-    input_ids=input_ids,
-    attention_mask=attention_mask,  # Pass attention mask
-    max_length=max_length,
-    num_beams=5,
-    pad_token_id=tokenizer.eos_token_id,  # Explicitly set the pad token ID
-    do_sample=False,
-    top_k=50,        # Use top-k sampling for diverse responses
-    top_p=0.95 
-)
-
-# Decode and print the response
-generated_text = tokenizer.decode(response[0], skip_special_tokens=True)
-print(generated_text)
+# Decode and print the output
+print("Bot:", tokenizer.decode(res[0], skip_special_tokens=True))
